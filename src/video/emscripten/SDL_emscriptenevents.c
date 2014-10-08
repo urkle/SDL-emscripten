@@ -444,11 +444,39 @@ Emscripten_HandleKeyPress(int eventType, const EmscriptenKeyboardEvent *keyEvent
 int
 Emscripten_HandleFullscreenChange(int eventType, const EmscriptenFullscreenChangeEvent *fullscreenChangeEvent, void *userData)
 {
+    SDL_WindowData *window_data = userData;
     /*make sure this is actually our element going fullscreen*/
     if(SDL_strcmp(fullscreenChangeEvent->id, "SDLFullscreenElement") != 0)
-        return 0;
+    {
+        /* the external shell changed the fullscreen
+         * So simply send the notification to the game
+         */
+        /* clear out fullscreen flags */
+        window_data->window->flags &= ~FULLSCREEN_MASK;
 
-    SDL_WindowData *window_data = userData;
+        int w,h;
+
+        if (fullscreenChangeEvent->isFullscreen)
+        {
+            /* use SDL_WINDOW_RESIZABLE as a hint as to if game support fullscreen desktop or not */
+            if (window_data->window->flags & SDL_WINDOW_RESIZABLE) {
+                window_data->window->flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+                w = fullscreenChangeEvent->screenWidth;
+                h = fullscreenChangeEvent->screenHeight;
+            } else {
+                window_data->window->flags |= SDL_WINDOW_FULLSCREEN;
+                w = window_data->windowed_width;
+                h = window_data->windowed_height;
+            }
+        } else {
+            /* probably not quite correct as it doesn't take into account pixel ratio */
+            w = window_data->windowed_width;
+            h = window_data->windowed_height;
+        }
+        SDL_SendWindowEvent(window_data->window, SDL_WINDOWEVENT_RESIZED, w, h);
+        return 0;
+    }
+
     if(fullscreenChangeEvent->isFullscreen)
     {
         SDL_bool is_desktop_fullscreen;
