@@ -463,6 +463,8 @@ Emscripten_HandleFullscreenChange(int eventType, const EmscriptenFullscreenChang
                 window_data->window->flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
                 w = fullscreenChangeEvent->screenWidth;
                 h = fullscreenChangeEvent->screenHeight;
+                // force the canvas size to be correct. so as to workaround fullscreen issues in Windows Firefox.
+                emscripten_set_canvas_size(w, h);
             } else {
                 window_data->window->flags |= SDL_WINDOW_FULLSCREEN;
                 w = window_data->windowed_width;
@@ -472,6 +474,8 @@ Emscripten_HandleFullscreenChange(int eventType, const EmscriptenFullscreenChang
             /* probably not quite correct as it doesn't take into account pixel ratio */
             w = window_data->windowed_width;
             h = window_data->windowed_height;
+            // force the canvas size to be correct. so as to workaround fullscreen ssues in Windows Firefox.
+            emscripten_set_canvas_size(w, h);
         }
         SDL_SendWindowEvent(window_data->window, SDL_WINDOWEVENT_RESIZED, w, h);
         return 0;
